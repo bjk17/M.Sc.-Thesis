@@ -1,0 +1,218 @@
+\ProvidesPackage{tilings}
+\RequirePackage{tikz}
+\RequirePackage{xifthen}
+
+\usetikzlibrary{patterns}
+\usetikzlibrary{calc}
+
+\definecolor{obstructionred}{RGB}{153,0,0}
+\definecolor{requirementgreen}{RGB}{0,153,0}
+
+% #1: scale
+%     Number
+% #2: width
+%     Integer
+% #3: height
+%     Integer
+% #4: points
+%     Coordinate list on the form {x0/y0,...,xn/yn}
+% #5: obstructions
+%     List of obstructions of the form {length/{(x0,y0),...,(xn/yn)}}
+% #6: requirements
+%     List of requirements of the form {length/{(x0,y0),...,(xn/yn)}}
+\newcommand{\tiling}[6]{%
+  \scalebox{#1}{%
+     \begin{tikzpicture}[
+      baseline    = (current bounding box.center),
+      obpoint/.style  = {circle, fill, obstructionred},
+      obedge/.style   = {thick, obstructionred},
+      reqpoint/.style  = {circle, fill, requirementgreen},
+      reqedge/.style   = {thick, requirementgreen},
+      nonnode/.style  = {inner sep=0.0pt, outer sep=0.0pt}]
+
+      \useasboundingbox (0.0,-.3) rectangle (#2,#3+.3);
+      \ifthenelse{#2>1 \AND #3>1}{%
+        \draw (0.01,0.01) grid (#2-0.01,#3-0.01);
+        }{\ifthenelse{#2>1}{%
+          \foreach[evaluate=\i as \x using int(\i-1)] \i in {2,...,#2}{%
+            \draw (\x,0.01) -- (\x,0.99);
+          }
+        }{\ifthenelse{#3>1}{%
+          \foreach[evaluate=\i as \y using int(\i-1)] \i in {2,...,#3}{%
+            \draw (0.01,\y) -- (0.99,\y);
+          }
+        }{}
+      }}
+      \draw[rounded corners=5pt] (0.01,0.01) rectangle (#2-0.01,#3-0.01);
+
+      \foreach \x/\y in {#4}
+      {%
+        \filldraw (\x + .5, \y + .5) circle (2.5pt);
+      }
+
+      % Obstructions
+      \foreach [count=\obnum] \oblen/\obpoints in {#5}{%
+        \foreach [count=\i] \pt in \obpoints{%
+          \node[nonnode] (p\obnum o\i) at \pt {};
+        }
+        \foreach \i in {1,...,\oblen}{%
+          \filldraw[obpoint] (p\obnum o\i) circle (0.8pt);
+        }
+
+        \ifthenelse{\oblen>1}
+        {%
+          \draw[obedge] \foreach \x [remember=\x as \lastx (initially 1)] in {2,...,\oblen}{%
+            (p\obnum o\lastx) -- (p\obnum o\x)
+          };
+        }
+        {}
+      }
+
+      % Requirements
+      \foreach [count=\reqnum] \reqlen/\reqpoints in {#6}{%
+        \foreach [count=\i] \pt in \reqpoints{%
+          \node[nonnode] (p\reqnum r\i) at \pt {};
+        }
+        \foreach \i in {1,...,\reqlen}{%
+          \filldraw[reqpoint] (p\reqnum r\i) circle (0.8pt);
+        }
+
+        \ifthenelse{\reqlen>1}
+        {%
+          \draw[reqedge] \foreach \x [remember=\x as \lastx (initially 1)] in {2,...,\reqlen}{
+            (p\reqnum r\lastx) -- (p\reqnum r\x)
+          };
+        }
+        {}
+      }
+    \end{tikzpicture}
+  }
+}
+\newcommand{\texttiling}[6]{\hspace*{0.5em}\raisebox{0.25em}{\tiling{#1}{#2}{#3}{#4}{#5}{#6}}}
+
+% #1: scale
+%     Number
+% #2: width
+%     Integer
+% #3: height
+%     Integer
+% #4: points
+%     Coordinate list on the form {x0/y0,...,xn/yn}
+% #5: obstructions
+%     List of obstructions of the form {length/{(x0,y0),...,(xn/yn)}}
+% #6: requirements
+%     List of requirements of the form {length/{(x0,y0),...,(xn/yn)}}
+% #7: size of points
+% #8: line width
+\newcommand{\tilingvar}[7]{%
+  \scalebox{#1}{%
+     \begin{tikzpicture}[
+      baseline    = (current bounding box.center),
+      obpoint/.style  = {circle, fill, obstructionred},
+      obedge/.style   = {obstructionred},
+      reqpoint/.style  = {circle, fill, requirementgreen},
+      reqedge/.style   = {requirementgreen},
+      nonnode/.style  = {inner sep=0.0pt, outer sep=0.0pt}]
+
+      \useasboundingbox (0.0,-.3) rectangle (#2,#3+.3);
+      \ifthenelse{#2>1 \OR #3>1}{%
+        \draw (0.01,0.01) grid (#2-0.01,#3-0.01);
+      }{}
+      \draw[rounded corners=2.5pt,very thin] (0.01,0.01) rectangle (#2-0.01,#3-0.01);
+
+      \foreach \x/\y in {#4}
+      {%
+        \filldraw (\x + .5, \y + .5) circle (2.5pt);
+      }
+
+      % Obstructions
+      \foreach [count=\obnum] \oblen/\obpoints in {#5}{%
+        \foreach [count=\i] \pt in \obpoints{%
+          \node[nonnode] (p\obnum o\i) at \pt {};
+        }
+        \foreach \i in {1,...,\oblen}{%
+          \filldraw[obpoint] (p\obnum o\i) circle (#7);
+        }
+
+        \ifthenelse{\oblen>1}
+        {%
+          \draw[obedge] \foreach \x [remember=\x as \lastx (initially 1)] in {2,...,\oblen}{%
+            (p\obnum o\lastx) -- (p\obnum o\x)
+          };
+        }
+        {}
+      }
+
+      % Requirements
+      \foreach [count=\reqnum] \reqlen/\reqpoints in {#6}{%
+        \foreach [count=\i] \pt in \reqpoints{%
+          \node[nonnode] (p\reqnum r\i) at \pt {};
+        }
+        \foreach \i in {1,...,\reqlen}{%
+          \filldraw[reqpoint] (p\reqnum r\i) circle (#7);
+        }
+
+        \ifthenelse{\reqlen>1}
+        {%
+          \draw[reqedge] \foreach \x [remember=\x as \lastx (initially 1)] in {2,...,\reqlen}{
+            (p\reqnum r\lastx) -- (p\reqnum r\x)
+          };
+        }
+        {}
+      }
+    \end{tikzpicture}
+  }
+}
+
+% \newcommand{\texttiling}[5]{%
+%   \raisebox{4pt}{\hspace{3pt}\tiling{0.6}{#1}{#2}{#3}{#4}{#5}\hspace{-3pt}}
+% }
+
+
+% #1: scale
+%     Number
+% #2: width
+%     Integer
+% #3: height
+%     Integer
+% #4: cells
+%     List of tuples seperated by / of a coordinate and value
+%     {(x0,y0)/{text_0},...,(xn,yn)/{text_n}}
+\newcommand{\strule}[4]{{\hspace{0.31em}\struleactual{#1}{#2}{#3}{#4}}}
+
+\newcommand{\struleactual}[4]{%
+  \scalebox{#1}{%
+     \begin{tikzpicture}[
+      baseline    = {([yshift=-.5ex]current bounding box.center)},
+      nonnode/.style  = {inner sep=0.0pt, outer sep=0.0pt}]
+
+      \useasboundingbox (0.0,-.3) rectangle (#2,#3+.3);
+      \draw[pattern=north west lines, pattern color=lightgray, rounded corners=5pt] (0.01,0.01) rectangle (#2-0.01,#3-0.01);
+      \foreach \coord/\value in {#4}
+      {%
+        \filldraw[white] \coord rectangle +(1, 1);
+        \node[xshift=0.5,yshift=0.5] (a) at ([shift={\coord}]0.5, 0.5) {\value};
+      }
+      \draw[rounded corners=5pt] (0.01,0.01) rectangle (#2-0.01,#3-0.01);
+
+      \ifthenelse{#2>1 \AND #3>1}{%
+        \draw (0.01,0.01) grid (#2-0.01,#3-0.01);
+        }{\ifthenelse{#2>1}{%
+          \foreach[evaluate=\i as \x using int(\i-1)] \i in {2,...,#2}{%
+            \draw (\x,0.01) -- (\x,0.99);
+          }
+        }{\ifthenelse{#3>1}{%
+          \foreach[evaluate=\i as \y using int(\i-1)] \i in {2,...,#3}{%
+            \draw (0.01,\y) -- (0.99,\y);
+          }
+        }{}
+      }}
+    \end{tikzpicture}
+  }
+}
+
+\newcommand{\point}[1]{%
+    \begin{tikzpicture}
+        \filldraw (0, 0) circle (#1);
+    \end{tikzpicture}
+}

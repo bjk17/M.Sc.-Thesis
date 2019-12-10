@@ -1,0 +1,411 @@
+
+%%%%%%%%%%% MACROS FOR DRAWING INTERVAL AND MESH PATTERNS %%%%%%%%%%%
+
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+
+% Sub-macros
+\newcommand{\shadetheboxesPM}[1]{
+    \foreach \x/\y in {#1}
+    \fill[pattern color = black!75, pattern=north east lines] (\x,\y) rectangle +(1,1);
+}
+
+\newcommand{\drawthegrid}[1]{
+    \draw (0.01,0.01) grid (#1+0.99,#1+0.99);
+}
+
+\newcommand{\drawverticallines}[3]{
+    \foreach \x in {#2}
+    \draw[line width=#3] (\x+0.01,0.01) -- (\x+0.01,#1+0.99);
+}
+
+\newcommand{\drawhorizontallines}[3]{
+    \foreach \y in {#2}
+    \draw[line width=#3] (0.01,\y+0.01) -- (#1+0.99,\y+0.01);
+}
+
+\newcommand{\drawtheclpattern}[1]{
+    \foreach \x/\y in {#1}
+    \filldraw (\x,\y) circle (6pt);
+}
+
+\newcommand{\drawclpattern}[2]{
+	\foreach[count=\x] \y in {#1}
+	{
+		\filldraw (\x,\y) circle (#2 pt);
+	}
+}
+
+\newcommand{\drawspecialbox}[1]{
+    \foreach \x/\y/\z/\w/\A in {#1}
+    {
+        \fill[color = white!100, opacity=1, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+        \draw[color = black, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+        \fill[black] (\x/2+\z/2,\y/2+\w/2) node {\A};
+    }
+}
+
+\newcommand{\drawspecialboxlarge}[1]{
+    \foreach \x/\y/\z/\w/\A in {#1}
+    {
+        \fill[color = white!100, opacity=1, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+        \draw[color = black, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+        \fill[black] (\x/2+\z/2,\y/2+\w/2) node {\Large \A};
+    }
+}
+
+\newcommand{\drawsolidshadedbox}[1]{
+    \foreach \x/\y/\z/\w/\A in {#1}
+    {
+        \fill[color = gray!50, opacity=1, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+        \draw[color = black, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+        \fill[black] (\x/2+\z/2,\y/2+\w/2) node {\A};
+    }
+}
+
+\newcommand{\drawlabels}[1]{
+	\foreach \x/\y/\lab in {#1}
+	{
+		\draw (\x + 0.5,\y + 0.5) node {\lab};
+	}
+}
+
+
+\newcommand{\pOneTwo}[1]{\mbox{\patt{#1}{2}{1,2}[][][][][][7]}}
+\newcommand{\pTwoOne}[1]{\mbox{\patt{#1}{2}{2,1}[][][][][][7]}}
+\newcommand{\pOneTwoThree}[1]{\mbox{\patt{#1}{3}{1,2,3}[][][][][][7]}}
+\newcommand{\pOneThreeTwo}[1]{\mbox{\patt{#1}{3}{1,3,2}[][][][][][7]}}
+\newcommand{\pTwoOneThree}[1]{\mbox{\patt{#1}{3}{2,1,3}[][][][][][7]}}
+\newcommand{\pOneThreeTwoFour}[1]{\mbox{\patt{#1}{4}{1,3,2,4}[][][][][][7]}}
+
+\newcommand{\etcdots}[2]{
+	\scalebox{#1}
+	{
+		\begin{tikzpicture}[baseline=(current bounding box.center)]
+			\filldraw (0,2) circle (#2 pt);
+			\filldraw (1,1) circle (#2 pt);
+			\filldraw (2,0) circle (#2 pt);
+		\end{tikzpicture}
+	}
+}
+
+\newcommand{\etcdotsflipped}[2]{
+    \scalebox{#1}
+    {
+        \begin{tikzpicture}[baseline=(current bounding box.center)]
+            \filldraw (0,0) circle (#2 pt);
+            \filldraw (1,1) circle (#2 pt);
+            \filldraw (2,2) circle (#2 pt);
+        \end{tikzpicture}
+    }
+}
+
+\newcommand{\decr}{\etcdots{0.2}{6}}
+\newcommand{\incr}{\etcdotsflipped{0.2}{6}}
+
+
+% #1: Scale
+% #2: Length
+% #3: Points
+% #4: Shades
+% #5: Markings
+% #6: Avoidance decorations
+% #7: Containment decorations
+% #8: Labels
+% #9: Size of the points
+\newcommand{\patt}[9][4={},5={},6={},7={},8={},9=4]
+{
+	\scalebox{#1}
+	{
+		\begin{tikzpicture}[baseline=(current bounding box.center)]
+			\useasboundingbox (0.0,-.3) rectangle (#2+1,#2+1.3);
+			\shadetheboxesPM{#4}
+			\draw (0.01,0.01) grid (#2+1-0.01,#2+1-0.01);
+
+			\drawsolidshadedbox{#6}
+			\drawspecialbox{#7}
+			\drawspecialboxlarge{#5}
+			\drawclpattern{#3}{#9}
+			\drawlabels{#8}
+		\end{tikzpicture}
+	}
+}
+
+% #1: Scale
+% #2: Length
+% #3: Points
+% #4: Shades
+% #5: Markings
+% #6: Avoidance decorations
+% #7: Containment decorations
+% #8: Circled points
+\newcommand{\cpatt}[8][4={},5={},6={},7={},8={}]
+{
+	\scalebox{#1}
+	{
+		\begin{tikzpicture}[baseline=(current bounding box.center)]
+			\useasboundingbox (0.0,-.3) rectangle (#2+1,#2+1.3);
+			\shadetheboxesPM{#4}
+			\draw (0.01,0.01) grid (#2+1-0.01,#2+1-0.01);
+
+			\drawsolidshadedbox{#6}
+			\drawspecialbox{#7}
+			\drawspecialboxlarge{#5}
+			\drawclpattern{#3}{4}
+
+			\foreach \x/\y in {#8}
+			{
+				\draw[line width=1] (\x,\y) circle (7 pt);
+			}
+		\end{tikzpicture}
+	}
+}
+
+
+% #1: Scale
+% #2: Width/Height
+% #3: Pattern lines
+% #4: Added lines
+% #5: Points
+% #6: Shadings
+% #7: Markings
+% #8: Ascending restrictions
+\newcommand{\metapatt}[8][6={},7={},8={}]
+{
+    \scalebox{#1}
+    {
+        \begin{tikzpicture}[baseline=(current bounding box.center)]
+					\foreach \width/\height in {#2}
+					{
+						\useasboundingbox (0.0,-.3) rectangle (\width+1,\height+1.3);
+            \shadetheboxesPM{#6}
+
+            \foreach \pos/\type in {#4}
+            {
+                \ifthenelse{\equal{\type}{v}}
+                {
+                    \drawverticallines{\height}{\pos}{1.7pt}
+                }
+                {
+								    \ifthenelse{\equal{\type}{d}}
+                    {
+                      \draw[densely dashed] (\pos,0) -- (\pos,\height+1);
+                    }
+										{
+											\drawhorizontallines{\width}{\pos}{1.7pt}
+										}
+                }
+            }
+
+            \foreach \pos/\type in {#3}
+            {
+                \ifthenelse{\equal{\type}{v}}
+                {
+                    \drawverticallines{\height}{\pos}{0.6pt}
+                }
+                {
+										\drawhorizontallines{\width}{\pos}{0.6pt}
+                }
+            }
+
+            \drawsolidshadedbox{#8}
+            \drawspecialbox{#7}
+
+            \foreach \x/\y/\type in {#5}
+            {
+                \ifthenelse{\equal{\type}{a}}
+                {
+                    % Added point
+                    \draw (\x,\y) circle (6pt);
+                    \filldraw (\x,\y) circle (3pt);
+                }
+                {
+                    % Pattern point
+                    \filldraw (\x,\y) circle (4pt);
+                }
+            }
+					}
+        \end{tikzpicture}
+    }
+}
+
+% #1: Scale
+% #2: Width/Height
+% #3: Pattern lines
+% #4: Added lines
+% #5: Points
+% #6: Shadings
+% #7: Markings
+% #8: Ascending restrictions
+% #9: Labels
+\newcommand{\dpatt}[9][6={},7={},8={},9={}]
+{
+    \scalebox{#1}
+    {
+        \begin{tikzpicture}[baseline=(current bounding box.center)]
+					\foreach \width/\height in {#2}
+					{
+						\useasboundingbox (0.0,-.3) rectangle (\width+1,\height+1.3);
+            \shadetheboxesPM{#6}
+
+            \foreach \pos/\type in {#4}
+            {
+                \ifthenelse{\equal{\type}{v}}
+                {
+                    \drawverticallines{\height}{\pos}{1.7pt}
+                }
+                {
+								    \ifthenelse{\equal{\type}{d}}
+                    {
+                      \draw[densely dashed] (\pos,0) -- (\pos,\height+1);
+                    }
+										{
+											\drawhorizontallines{\width}{\pos}{1.7pt}
+										}
+                }
+            }
+
+            \foreach \pos/\type in {#3}
+            {
+                \ifthenelse{\equal{\type}{v}}
+                {
+                    \drawverticallines{\height}{\pos}{0.6pt}
+                }
+                {
+										\drawhorizontallines{\width}{\pos}{0.6pt}
+                }
+            }
+
+            \drawsolidshadedbox{#8}
+            \drawspecialbox{#7}
+
+            \foreach \x/\y/\type in {#5}
+            {
+                \ifthenelse{\equal{\type}{a}}
+                {
+                    % Added point
+                    \draw9 (\x,\y) circle (6pt);
+                    \filldraw (\x,\y) circle (3pt);
+                }
+                {
+                    % Pattern point
+                    \filldraw (\x,\y) circle (4pt);
+                }
+            }
+
+						\drawlabels{#9}
+					}
+        \end{tikzpicture}
+    }
+}
+
+\newcommand{\mpattern}[4]{										% mesh pattern for text
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  	\useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+
+    \shadetheboxesPM{#4}
+
+    \drawthegrid{#2}
+
+    \drawtheclpattern{#3}
+
+  \end{tikzpicture}}
+}
+
+% FROM TSA
+
+\newcommand{\textmpattern}[4]{                                      % mesh pattern for text
+    \scalebox{#1}
+    {
+      \begin{tikzpicture}[baseline=(current bounding box.center)]
+        \useasboundingbox (0.0,0) rectangle (#2+1,#2+0);
+        \shadetheboxesPM{#4}
+
+        \drawthegrid{#2}
+
+        \drawclpattern{#3}{6}
+
+      \end{tikzpicture}
+    }
+}
+
+
+% #1: Scale
+% #2: Length
+% #3: Points
+% #4: Shades
+% #5: Circled points
+% #6: Added lines
+% #7: Arrows
+\newcommandx{\shpatt}[7][4={},5={},6={},7={}]
+{
+    \scalebox{#1}
+    {
+        \begin{tikzpicture}[baseline=(current bounding box.center)]
+            \useasboundingbox (0.0,-.3) rectangle (#2+1,#2+1);
+            \shadetheboxesPM{#4}
+            \draw (0.01,0.01) grid (#2+1-0.01,#2+1-0.01);
+
+            \drawclpattern{#3}{4}
+
+            \foreach \x/\y in {#5}
+            {
+                \draw[line width=1] (\x,\y) circle (7 pt);
+            }
+
+            \foreach \x/\y in {#6}
+            {
+                \draw[densely dashed, line width=1.7pt] (\x,0) -- (\x,#2+1);
+                \draw[densely dashed, line width=1.7pt] (0,\y) -- (#2+1,\y);
+            }
+
+            \foreach \xa/\ya/\xb/\yb in {#7}
+            {
+                \draw[->, line width=1.7pt] (\xa,\ya) -- (\xb-0.12,\yb-0.12);
+            }
+        \end{tikzpicture}
+    }
+}
+
+% #1: Scale
+% #2: Length
+% #3: Points
+% #4: Shades
+% #5: Circled points
+% #6: Added lines
+% #7: Arrows
+% #8: Special boxes
+\newcommandx{\shpattb}[8][4={},5={},6={},7={},8={}]
+{
+    \scalebox{#1}
+    {
+        \begin{tikzpicture}[baseline=(current bounding box.center)]
+            \useasboundingbox (0.0,-.3) rectangle (#2+1,#2+1);
+            \shadetheboxesPM{#4}
+            \draw (0.01,0.01) grid (#2+1-0.01,#2+1-0.01);
+
+            \drawclpattern{#3}{4}
+
+            \foreach \x/\y in {#5}
+            {
+                \draw[line width=1] (\x,\y) circle (7 pt);
+            }
+
+            \foreach \x/\y in {#6}
+            {
+                \draw[densely dashed, line width=1.7pt] (\x,0) -- (\x,#2+1);
+                \draw[densely dashed, line width=1.7pt] (0,\y) -- (#2+1,\y);
+            }
+
+            \foreach \xa/\ya/\xb/\yb in {#7}
+            {
+                \draw[->, line width=1.7pt] (\xa,\ya) -- (\xb-0.12,\yb-0.12);
+            }
+            \foreach \xa/\ya/\xb/\yb in {#8}
+            {
+                \draw[line width=1.5pt] (\xa+0.1,\ya+0.1) rectangle (\xb-0.1,\yb-0.1);
+            }
+        \end{tikzpicture}
+    }
+}

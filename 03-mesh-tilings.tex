@@ -1,0 +1,853 @@
+\chapter{Mesh tilings\label{mesh tilings chapter}}
+
+In this chapter we review the terminology on permutations and mesh patterns 
+before defining \emph{mesh tilings}. In Section~\ref{mesh tilings 
+implementation} we explain how we apply \CombCov\ to mesh tilings and discuss 
+the results in Section~\ref{mesh tilings results}. We consider this to be our
+main contribution apart from the framework itself.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Background\label{mesh tilings background}}
+
+\begin{definition}
+  A \emph{(classical) permutation of length $n$} is a bijection from the set of 
+  the first $n$ integers, $\llbracket n \rrbracket = \left\{ 1, 2, \ldots, n 
+  \right\}$ to itself. The set of all permutations of length $n$ is denoted with 
+  $\S_n$ and $\S = \bigcup\limits_{n=0}^{\infty}\S_n$ is the set of all 
+  permutations.
+\end{definition}
+
+A permutation can also be viewed as a string $\pi(1)\cdots\pi(n)$ by listing the 
+values that $\pi$ takes at each index. An example of this is $\pi = 35142$, a 
+permutation of length five with $\pi(1) = 3$, $\pi(2) = 5$, $\pi(3) = 1$, 
+$\pi(4) = 4$ and $\pi(5) = 2$. The visual \emph{grid representation} of $\pi$, 
+denoted with $\Gr{\pi}$, is the plot of $\left\{ (i, \pi(i)) \mid i \in 
+\llbracket n \rrbracket \right\}$ in a Cartesian coordinate system, shown in 
+Figure~\ref{figure: Gr(35142)}. The only permutation of length 0 is called the 
+\emph{empty permutation} and it is denoted by $\epsilon$.
+
+\begin{figure}[htbp]
+  \center
+  \begin{tikzpicture}[scale=\pattdispscale, baseline={([yshift=-3pt]current bounding box.center)}]
+    \def \n {5}
+    \foreach \x in {1,...,\n} {
+      \draw[gray] (0,\x) -- (\n+1,\x);
+      \draw[gray] (\x,0) -- (\x,\n+1);
+    }
+    \foreach \x in {(1,3),(2,5),(3,1),(4,4),(5,2)} {\fill[black] \x circle (5pt);}
+  \end{tikzpicture}
+  \caption{The grid representation of the permutation $35142$}
+  \label{figure: Gr(35142)}
+\end{figure}
+
+\begin{definition}
+  The \emph{standardization} of a length $n$ string of unique numbers $s_1 
+  \cdots s_n$ is the permutation $\sigma \in \S_n$ which has the same relative 
+  ordering as the string, meaning that for every $i, j$, $\sigma(i) < \sigma(j)$ 
+  if $s_i < s_j$. We write $\st(s_1 \cdots s_n) = \sigma$.
+\end{definition}
+
+Every \emph{index set} $\left\{ i_1, \ldots, i_k \right\} \subseteq \llbracket n 
+\rrbracket$ (with $1 \leq i_1 < i_2 < \cdots < i_k \leq n$) \emph{induces} a 
+substring $\pi(i_1)\cdots\pi(i_k)$ of length $k$ of $\pi$ and is called an 
+\emph{occurrence} of the \emph{pattern} $p = \st(\pi(i_1)\cdots\pi(i_k))$ in 
+$\pi$. We say that $\pi$ \emph{contains} $p$ as a \emph{subpermutation} or 
+\emph{(classical) pattern} and use the notation $p \preceq \pi$. If there exists 
+no index set that induces an occurrence of $p$ we say that $\pi$ \emph{avoids} 
+$p$. The set of all patterns contained in $\pi$ is denoted with $\Delta(\pi) = 
+\left\{ p \in \S \mid p \preceq \pi \right\}$ and $\Delta(\Pi) = \bigcup_{\pi 
+\in \Pi}{\Delta(\pi)}$ for a set of permutations $\Pi$.
+
+% Sometimes we abuse the notation and say that the subset $\left\{ \left( i_j, 
+% \pi_j \right) \mid j = 1, \ldots, k \right\}$ of $\Gr{\pi}$ is the occurrence 
+% of the pattern $p$ in $\pi$. 
+
+\begin{example}
+  The permutation $\pi = 35142$ contains the pattern $q = 213$, highlighted with 
+  red circles in Figure~\ref{figure:q in pi}, because $\left\{ 1, 3, 4 \right\}$ 
+  induces the substring $\pi(1)\pi(3)\pi(4)= 314$ that has the same relative 
+  ordering as $q$ (meaning $\st(314) = 213 = q$). Note that this is the only 
+  occurrence of $q$ in $\pi$. 
+  \label{example:q in pi}
+
+  \begin{figure}[htbp]
+    \center
+    \begin{tikzpicture}[scale=\pattdispscale, baseline={([yshift=-3pt]current bounding box.center)}]
+      \def \n {5}
+      \foreach \x in {1,...,\n} {
+        \draw[gray] (0,\x) -- (\n+1,\x);
+        \draw[gray] (\x,0) -- (\x,\n+1);
+      }
+      \foreach \x in {(1,3),(2,5),(3,1),(4,4),(5,2)} {\fill[black] \x circle (5pt);}
+      \foreach \x in {(1,3),(3,1),(4,4)} {\draw[thick,red] \x circle (7pt);}
+    \end{tikzpicture}
+    \caption{An occurrence of $213$ in $35142$ highlighted in red}
+    \label{figure:q in pi}
+  \end{figure}
+\end{example}
+
+The set of all permutations of length $n$ that avoid $\pi$ is denoted by 
+$\Avn{\pi}$ and we write $\Av{\pi} = \bigcup\limits_{n=0}^{\infty}\Avn{\pi}$. 
+If $\Pi$ is a set of permutations we similarly write $\Av{\Pi} = 
+\bigcap\limits_{\pi \in \Pi}\Av{\pi}$, i.e., avoiding a set of permutations 
+means avoiding every permutation in the set. Note that $\Av{\emptyset} = \S$.
+
+In contrast to the set of avoiding permutations, we define the 
+\emph{containment set} as the complementary, i.e., for a set of permutations 
+$\Pi$ we define $\Con{\Pi} = \S_n \setminus \Avn{\pi}$ and write $\Co{\Pi} = 
+\bigcup\limits_{n=0}^{\infty}\Con{\Pi}$.
+
+\begin{example}
+  The set of all permutations avoiding $21$ is the set of \emph{identity} 
+  permutations: \[ \Av{21} = \left\{ \epsilon, 1, 12, 123, \ldots \right\} \]
+\end{example}
+
+A \emph{permutation class} is a set $\mc{C}$ of permutations such that 
+$\Delta(\mc{C}) \subseteq \mc{C}$. It it well known that $\Av{\Pi}$ is a 
+permutation class for any set of permutations $\Pi$. A permutation class is 
+\emph{``closed downwards''} as every pattern contained in every permutation in 
+$\mc{C}$ is also in $\mc{C}$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Mesh patterns\label{mesh patterns background}}
+
+The concept of \emph{mesh patterns} in permutations was introduced by 
+\textcite{branden_mesh_2011} as a pair
+\[p = (\pi, R) \text{ with } \pi \in \S_k \text{ and } R \subseteq \llbracket 
+0, k \rrbracket \times \llbracket 0, k \rrbracket \] where $\llbracket 0, k 
+\rrbracket = \{0, 1, \ldots, k\}$ and $R$ is a set of Cartesian coordinates 
+$\boks{i, j}$ denoting the lower left corners of the squares in the grid 
+representation of $\pi$ which are \emph{shaded}. An example with $p = (\pi, R)$ 
+where $\pi = 213$ and $R = \left\{ \boks{1,2}, \boks{1,3}, \boks{2,2} \right\}$ 
+is shown in Figure~\ref{figure: Gr(213, shading)}.
+
+\begin{figure}[htbp]
+  \center
+  \mpattern{scale=\patttablescale}{ 3 }{ 1/2, 2/1, 3/3 }{ 1/2, 1/3, 2/2 }
+  \caption{The mesh pattern $p = \left(213, \left\{ \boks{1,2}, \boks{1,3}, \boks{2,2} \right\} \right)$}
+  \label{figure: Gr(213, shading)}
+\end{figure}
+
+\begin{definition}[\citeauthor{branden_mesh_2011}]
+  An occurrence of $p$ in $\sigma \in \S_n$ is a subset $\omega$ of 
+  $\Gr{\sigma}$ such that there are order-preserving injections $\alpha, \beta 
+  \colon \llbracket k \rrbracket \mapsto \llbracket n \rrbracket$ satisfying the 
+  following two conditions. Firstly, $\omega$ is an occurrence of $\pi$ in the 
+  classical sense, that is
+
+    i. $\omega = \left\{ \left( \alpha(i), \beta(j) \right) \mid (i, j) \in \Gr{\pi} \right\}$
+
+  \noindent
+  Define $R_{ij} = \left[ \left( \alpha(i) + 1, \alpha(i + 1) - 1 \right) 
+  \right] \times \left[ \left( \beta(j) + 1, \beta(j + 1) - 1 \right) \right]$ 
+  or $i,j \in \llbracket 0, k \rrbracket$ where $\alpha(0) = \beta(0) = 0$ and 
+  $\alpha(k + 1) = \beta(k + 1) = n + 1$. Then the second condition is
+
+    ii. if $\boks{i, j} \in R$ then $R_{ij} \cap \Gr{\sigma} = \emptyset$.
+
+  \noindent
+  We call $R_{ij}$ the \emph{region corresponding to} $\boks{i,j}$ and $\pi$ 
+  the \emph{underlying classical pattern} of $p$.
+\end{definition}
+
+Note that we defined an occurrence of a pattern in a classical permutation to be 
+the subsequence of the permutation matching the pattern, but Brändén and 
+Claesson defined an occurrence of a pattern in a mesh pattern to be the subset 
+of the grid representation matching the pattern. For the sake of simplicity in 
+what is to come we will keep with the original author's definition of 
+occurrences.
+
+\begin{example}
+  Recall Example~\ref{example:q in pi} where we saw that $\pi = 35142$ contains 
+  $q = 213$ as a pattern with only one occurrence. There is only one occurrence 
+  of $q$ in $\sigma = 53241$ as well, namely $324$. Figure~\ref{figure:p not in 
+  pi and p in sigma} shows us two things. One the left side, we see that $p = 
+  \left( 213, \left\{ \boks{1,2}, \boks{1,3}, \boks{2,2} \right\} \right)$ is 
+  \emph{not} contained in $\pi$, because the point $(2,5) \in \Gr{\pi}$ lies 
+  inside $R_{13}$. On the right side we see that $\sigma$ contains $p$, since 
+  for the only occurrence of $q$ in $\sigma$ the shaded area does not contain 
+  any of the points of $\Gr{\sigma}$. 
+
+  \begin{figure}[htbp]
+    \center
+    \begin{tikzpicture}[scale=\pattdispscale, baseline={([yshift=-3pt]current bounding box.center)}]
+      \useasboundingbox (0.0,-0.1) rectangle (5+1.4,5+1.1);
+      
+      \foreach [count=\x] \y in {3, 5, 1, 4, 2}
+          \filldraw (\x,\y) circle (4pt);
+      
+      \foreach \x/\y in {1/3, 3/1, 4/4}
+          \draw[thick,red] (\x,\y) circle (7pt);
+
+      \foreach \xa/\ya/\xb/\yb in {1/4/3/6, 1/3/3/4, 3/3/4/4}
+          \draw[line width=1pt] (\xa+0.1,\ya+0.1) rectangle (\xb-0.1,\yb-0.1);
+
+      \foreach \x/\y in {1/3, 1/4, 1/5, 2/3, 2/4, 2/5, 3/3}
+          \fill[pattern color = black!65, pattern=north east lines] (\x,\y) rectangle +(1,1);
+      
+      \draw[very thin] (1,0.01) -- (1,5.99);
+      \draw[very thin] (3,0.01) -- (3,5.99);
+      \draw[very thin] (4,0.01) -- (4,5.99);
+      \draw[very thin] (0.01,1) -- (5.99,1);
+      \draw[very thin] (0.01,3) -- (5.99,3);
+      \draw[very thin] (0.01,4) -- (5.99,4);
+
+      \draw[densely dotted, line width=0.6pt] (2,0.01) -- (2,5.99);
+      \draw[densely dotted, line width=0.6pt] (5,0.01) -- (5,5.99);
+      \draw[densely dotted, line width=0.6pt] (0.01,2) -- (5.99,2);
+      \draw[densely dotted, line width=0.6pt] (0.01,5) -- (5.99,5);
+    \end{tikzpicture}
+    \quad\quad
+    \begin{tikzpicture}[scale=\pattdispscale, baseline={([yshift=-3pt]current bounding box.center)}]
+      \useasboundingbox (0.0,-0.1) rectangle (5+1.4,5+1.1);
+      
+      \foreach [count=\x] \y in {5, 3, 2, 4, 1}
+          \filldraw (\x,\y) circle (4pt);
+      
+      \foreach \x/\y in {2/3, 3/2, 4/4}
+          \draw[thick,red] (\x,\y) circle (7pt);
+
+      \foreach \xa/\ya/\xb/\yb in {2/4/3/6, 2/3/3/4, 3/3/4/4}
+          \draw[line width=1pt] (\xa+0.1,\ya+0.1) rectangle (\xb-0.1,\yb-0.1);
+
+      \foreach \x/\y in {2/3, 2/4, 2/5, 3/3}
+          \fill[pattern color = black!65, pattern=north east lines] (\x,\y) rectangle +(1,1);
+      
+      \draw[very thin] (2,0.01) -- (2,5.99);
+      \draw[very thin] (3,0.01) -- (3,5.99);
+      \draw[very thin] (4,0.01) -- (4,5.99);
+      \draw[very thin] (0.01,2) -- (5.99,2);
+      \draw[very thin] (0.01,3) -- (5.99,3);
+      \draw[very thin] (0.01,4) -- (5.99,4);
+
+      \draw[densely dotted, line width=0.6pt] (1,0.01) -- (1,5.99);
+      \draw[densely dotted, line width=0.6pt] (5,0.01) -- (5,5.99);
+      \draw[densely dotted, line width=0.6pt] (0.01,1) -- (5.99,1);
+      \draw[densely dotted, line width=0.6pt] (0.01,5) -- (5.99,5);
+    \end{tikzpicture}
+    \caption{The mesh pattern $p$ from Figure~\ref{figure: Gr(213, shading)} is 
+    not contained in $\pi$ (left), but is contained in $\sigma$ (right)}
+    \label{figure:p not in pi and p in sigma}
+  \end{figure}
+\end{example}
+
+Our definitions of $\Av{p}$ and $\Co{p}$ naturally extend to be the set of all 
+permutations that avoid and contain $p$, respectively. Similarly $\Av{M} = 
+\bigcap\limits_{m \in M}\Av{m}$ and $\Co{M} = \S \setminus \Av{M}$ for a set $M$ 
+of mesh patterns.
+
+\emph{Vincular} \cite{babson_generalized_2000}, \emph{covincular} 
+\cite{bean_enumerations_2017} and \emph{bivincular} 
+\cite{bousquet-melou_2+2-free_2010} permutation patterns are special cases of 
+the more general mesh patterns where there are restrictions on the occurrence to 
+have adjacent indices, values or both in the permutation. We write them as a 
+triple $(\pi, X, Y)$ where $\pi$ is the underlying permutation of length $n$ and 
+$X,Y \subseteq \llbracket 0, n \rrbracket$ denote which columns and rows are 
+shaded in the mesh pattern. Using our notation, this is equal to the mesh 
+pattern \[ (\pi, R) \text{ with } R = \bigcup_{ x \in X }{ \left\{ x \right\} 
+\times \llbracket 0, n \rrbracket } \cup \bigcup_{ y \in Y }{ \llbracket 0, n 
+\rrbracket \times \left\{ y \right\} } .\] If $X \neq \emptyset$ and $Y = 
+\emptyset$ it is a vincular pattern, if $X = \emptyset$ and $Y \neq \emptyset$ 
+it is a covincular pattern and if neither $X$ or $Y$ is the empty set it is a 
+bivincular pattern. See Figure~\ref{figure: Examples of vincular, covincular 
+and bivincular permutation patterns} for examples of a vincular, a covincular 
+and a bivincular permutation pattern.
+
+\begin{figure}[htbp]
+  \center
+  \mpattern{scale=\patttablescale}{ 3 }{ 1/1, 2/2, 3/3 }{1/0, 1/1, 1/2, 1/3, 3/0, 3/1, 3/2, 3/3 }
+  \mpattern{scale=\patttablescale}{ 3 }{ 1/2, 2/3, 3/1 }{0/2, 1/2, 2/2, 3/2 }
+  \mpattern{scale=\patttablescale}{ 3 }{ 1/3, 2/1, 3/2 }{2/0, 2/1, 2/2, 2/3, 0/1, 1/1, 3/1 }
+  \caption{$(123, \{ 1, 3 \}, \emptyset)$, $(231, \emptyset, \{ 2 \})$ and $(312, \{ 2 \}, \{ 1 \})$}
+  \label{figure: Examples of vincular, covincular and bivincular permutation patterns}
+\end{figure}
+
+So far we have defined the concept of permutations containing permutations and 
+mesh patterns. \textcite{tannock_equivalence_2018} defined mesh pattern 
+containment of mesh patterns, recalled below.
+
+\begin{definition}[\citeauthor{tannock_equivalence_2018}]
+  A mesh pattern $q = (\kappa, T)$ \emph{contains} a mesh pattern $p = 
+  (\tau, R)$ as a \emph{subpattern} if $\kappa$ contains $p$ and $\left( 
+  \bigcup_{(i,j) \in R}{R_{ij}} \right) \subseteq T$.
+\end{definition}
+
+If $p$ does not contain $q$ we say that $p$ \emph{avoids} $q$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Mesh tilings}
+
+\begin{definition}\label{definition:block}
+  A \emph{block}\footnote{In the Python source code this is called a 
+  \emph{cell}.} $\mf{B}$ is a tuple $(\mc{O}, \mc{R})$ of two sets called 
+  \emph{obstructions} and \emph{requirements} of mesh patterns that 
+  \emph{generates} the set of permutations \[ \Av{\mc{O}} \cap \Co{\mc{R}} .\]
+  The block $\overset{\leftharpoonup}{\mf{B}} = (\mc{R}, \mc{O})$ is called the 
+  \emph{flipped} block (of $\mf{B}$).
+\end{definition}
+
+We use the term ``block'' interchangeably for the tuple and the set of 
+permutations that it generates. 
+
+\begin{example}
+  Some notable blocks include the \emph{point block} $(\left\{ 12, 21 \right\}, 
+  \left\{ 1 \right\})$, the \emph{empty block} $(\left\{ 1 \right\}, \emptyset)$ 
+  and the \emph{free block} $(\emptyset, \emptyset)$ that generate the sets 
+  $\left\{ 1 \right\}$, $\left\{ \epsilon \right\}$ and $\S$ respectively.
+\end{example}
+
+Before moving on to define mesh tilings we review generalized grid classes 
+introduced by \textcite{vatter_small_2011}. Given a permutation $\pi$ of length 
+$n$ and sets $X, Y \subseteq \llbracket n \rrbracket$, we denote with $\pi( X 
+\times Y )$ the standardization of the subsequence of $\pi$ with indices from 
+$X$ and values in $Y$. For example $25134([1, 4] \times [2, 5]) = \st(253) = 
+132$.
+
+Now suppose $\mc{M}$ is a $c \times r$ matrix (indexed from left to right and 
+bottom to top) whose entries are sets of permutations. An 
+\emph{$\mc{M}$-gridding} of the permutation $\pi$ of length $n$ is a pair of 
+sequences $1 = c_1 \leq \cdots \leq c_{t+1} = n + 1$ (the column divisions) 
+and $1 = r_1 \leq \cdots \leq r_{u+1} = n + 1$ (the row divisions) such that 
+$\pi(\left[c_k, c_{k+1} \right) \times \left[r_l, r_{l+1} \right))$ is either 
+empty or is a member of $\mc{M}_{k,l}$ for all $k \in \llbracket t \rrbracket$ 
+and $l \in \llbracket u \rrbracket$. The \emph{generalized grid class} of 
+$\mc{M}$, $\Grid{\mc{M}}$, is the set of all permutations with an 
+$\mc{M}$-gridding.
+
+\begin{definition}
+  A \emph{mesh tiling} $\mc{M}$ is a $c \times r$ matrix of \emph{blocks} (as in 
+  Definition~\ref{definition:block}), representing the set of permutations 
+  $\Grid{\mc{M}}$.
+\end{definition}
+
+A $1 \times 1$ mesh tiling generates the same set of permutations as the (only) 
+block in the mesh tiling.
+
+\begin{example}
+  The $2 \times 2$ mesh tiling (depicted in Figure~\ref{figure:mesh tiling of 
+  perms starting with one}) with empty blocks in coordinates $(0, 1)$ and 
+  $(1, 0)$, a point block at $(0, 0)$ and a free block at $(1, 1)$ generates 
+  the set of permutations starting with $1$.
+
+  \begin{figure}[htbp]
+    \center
+    \strule{\pattdispscale}{2}{2}{(0,0)/\point{2pt}, (1,1)/$\S$}
+    \caption{A mesh tiling generating all permutations starting with one}
+    \label{figure:mesh tiling of perms starting with one}
+  \end{figure}
+\end{example}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation\label{mesh tilings implementation}}
+
+With mesh tilings we are seeking to find covers for avoidance sets of 
+permutations of the form $\Av{M}$ where $M$ is a set of mesh patterns. Often we 
+are interested in the complementary set $\Co{M}$ as well because a cover for it 
+might help us understand the structure of the permutation class. In practice, 
+therefore, we usually apply \CombCov\ on a single $1 \times 1$ mesh tilings 
+hoping to find a cover of the form of one or more mesh tilings of various sizes. 
+Our implementation expects the root object to be a $1 \times 1$ mesh tiling but 
+it works as well for mesh tilings of larger sizes.
+
+The framework requires us to implement two main functions for our mesh tiling 
+object in Python. Given a $c \times r$ mesh tiling $\mc{M}$ these methods are:
+\begin{itemize}[(i)]
+  \item \texttt{get\_elmnts}: Takes in a parameter $l$ and outputs all elements 
+    of length $l$ generated $\mc{M}$ in a consistent order. This is easy to 
+    describe mathematically but harder to implement programmatically. We refer 
+    to the original implementation by \textcite{bean_permstruct_2017} for 
+    further details.
+  \item \texttt{get\_subrules}: Generates the subrules $S_i$ of the root object 
+    $\mc{M}$. Recall that not all subrules need to be \emph{valid}, but from a 
+    performance aspect it preferably does not generate too many invalid rules. 
+    Algorithm~\ref{algorithm:mesh tiling subrule generation} shows in 
+    pseudo-code how we implemented the subrule generation that yielded the 
+    results in Section~\ref{mesh tilings results}. This is the product of 
+    several iterations where we edited the algorithm to find more covers while 
+    keeping the search space small enough for tolerable running times.
+\end{itemize}
+
+\begin{algorithm}[ht]
+  \caption{Mesh tiling subrule generation}
+  \begin{algorithmic}
+  \REQUIRE $1 \times 1$ mesh tiling $\mc{M}$ and positive integers \texttt{max\_columns}, \texttt{max\_rows} and \texttt{max\_active\_blocks}
+  \STATE $\mc{C} \leftarrow \mc{M}_{1, 1}$
+  \STATE $P \leftarrow \emptyset$
+  \FORALL{patterns $p$ in the union of the obstructions and requirements of $\mc{C}$}
+    \IF{$p$ is a permutation}
+      \STATE append all subpermutations of $p$ to $P$
+    \ELSIF{$p$ is a mesh pattern}
+      \STATE append all subpatterns of $p$ to $P$
+    \ENDIF
+  \ENDFOR
+  \STATE $C \leftarrow$ the set of $\mc{C}$, $\overset{\leftharpoonup}{\mc{C}}$, the point block and the free block
+  \FORALL{patterns $p$ in $P$}
+    \STATE append the block $\left( \left\{ p \right\}, \emptyset \right)$ to $C$
+  \ENDFOR
+  \STATE $M \leftarrow$ the set of the $1 \times 1$ mesh tiling with the empty block
+  \FORALL{$i$ such that $1 \leq i \leq \texttt{max\_columns}$}
+  \FORALL{$j$ such that $1 \leq j \leq \texttt{max\_rows}$}
+  \FORALL{$a$ such that $i * j \leq a \leq \texttt{max\_active\_blocks}$}
+    \FORALL{combinations of $a$ blocks (with repetition) from $C$}
+      \FORALL{combinations of $a$ squares in an $i \times j$ grid of which there is no column or row with no selected square}
+        \STATE append the $i \times j$ mesh tiling with the $a$ blocks placed in the chosen squares to $M$
+      \ENDFOR
+    \ENDFOR
+  \ENDFOR
+  \ENDFOR
+  \ENDFOR
+  \RETURN $M$
+  \end{algorithmic}
+  \label{algorithm:mesh tiling subrule generation}
+\end{algorithm}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results\label{mesh tilings results}}
+
+Our aim here is twofold. One is to reproduce old results by finding covers for 
+sets of permutations avoiding a set of mesh patterns (we will call this 
+\emph{avoidance sets} as they are not necessarily permutation classes) and 
+compare them to the published results. The other is to try to find covers for 
+avoidance sets that are not already known and thus contribute new knowledge to 
+the field of enumerative combinatorics.
+
+Just as in Section~\ref{words results} all results presented here were obtained 
+using version \texttt{v0.6.3} of \CombCov\ and \texttt{max\_elmnt\_size = 7}.
+As these problems demanded more computing power we ran them on the computer 
+cluster \emph{Garpur}\footnote{See \url{http://ihpc.is/garpur/} for details.} 
+managed by the University of Iceland. The execution times were on the scale of 
+hours and days with a hard 2-week time limit after which the execution was 
+stopped and deemed unsuccessful.
+
+We inputted 620 different avoidance sets into \CombCov\ along with their 
+complementary containment sets for a total of 1240 unique jobs with the 
+framework. In each job we tried multiple and increasing values for 
+\texttt{max\_columns}, \texttt{max\_rows} and \texttt{max\_active\_blocks}, 
+encoded as a triple $(c, r, a)$. Their initial values were set to $(2, 2, 3)$, 
+and if a cover was not found we next tried $(3, 3, 3$), after that $(4, 4, 4)$, 
+then $(4, 4, 5)$ and lastly $(5, 5, 5)$. We won't summarize all of the results 
+here but instead highlight a few interesting covers and discuss their 
+significance.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Vincular and covincular length 3 mesh patterns\label{Vincular and covincular length 3 mesh patterns results}}
+
+\textcite{claesson_generalized_2001} studied \emph{generalized permutation 
+patterns} (which later became called vincular patterns) of length 3 and 
+enumerated the permutation sets avoiding one or two such patterns. He used a 
+notation of letters and dashes to indicate shaded columns, e.g.,
+$a\text{-}bc = \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 }$ and
+$ca\text{-}b = \mpattern{scale=\patttextscale}{ 3 }{ 1/3, 2/1, 3/2 }{ 1/0, 1/1, 1/2, 1/3 }$.
+
+In Figure~\ref{figure:Cleasson Av(a-bc)} we show the cover which \CombCov\ finds 
+for an avoidance set that is enumerated by the \emph{Bell numbers} (OEIS 
+sequence number \oeis{A000110}), meaning that $\left| \Avn{\mc{A}} \right|$ is 
+the $n$-th Bell number, $B_n$. 
+
+\begin{figure}[htbp]
+  \center
+    \begin{tabular}{ r c l l }
+    $\mc{A} = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 } }$ & $=$ & $ 
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{3}{2}{
+      (0,1)/$\mc{A}$,
+      (1,0)/\point{2pt}, 
+      (2,1)/$\mc{B}$
+    }$ & $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{} }$ 
+  \end{tabular}
+  \caption{\CombCov\ cover of $\Av{a\text{-}bc}$}
+  \label{figure:Cleasson Av(a-bc)}
+\end{figure}
+
+It's easy to see that the cover indeed generates the permutations that avoid 
+$\mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 }$. 
+More interesting is deriving the \emph{exponential generating function (EGF)} 
+$F = \sum_{n \geq 0} {a_n \over n!} x^n$ and show that $a_n = B_n$, proving that 
+the sequence is enumerated by the Bell numbers.
+
+We start by noting that $\left| \Avn{12} \right| = 1$ for all $n$ so $\mc{B}$ 
+in Figure~\ref{figure:Cleasson Av(a-bc)} is enumerated by $(1)_n$ and has EGF 
+$\sum_{n \geq 0} {1 \over n!} x^n = e^x$.
+This gives us
+
+\begin{align*}
+  \text{}     \qquad & F = 1 + \int F e^x dx \\
+  \text{i.e.} \qquad & \frac{d}{dx} F = F e^x \\
+  \text{i.e.} \qquad & \int \frac{1}{F} dF = \int e^x dx \\
+  \text{i.e.} \qquad & \ln(F) = e^x + C \\
+  \text{i.e.} \qquad & F = A e^x
+\end{align*}
+
+We have shown that $\sum_{n \geq 0} {a_n \over n!} x^n = Ae^x$ for some constant 
+$A$. We know that there is only one permutation of length zero in $\mc{A}$ so 
+putting $a_0 = 1$ into the equation at $x = 0$ gives us $1 = Ae$ i.e.\@ 
+$A = e^{-1}$ so $F = e^{e^x - 1}$ which is indeed the EGF for the Bell numbers.
+
+In Figure~\ref{figure:Cleasson Av(a-bc, a-cb)} we present the cover \CombCov\ 
+found for an avoidance set that is enumerated with $I_n$ (\oeis{A000085}), the 
+number of \emph{involutions} in $\S_n$.
+
+\begin{figure}[htbp]
+  \center
+    \begin{tabular}{ r c l l }
+    $\mc{A} = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 }, \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{ 2/0, 2/1, 2/2, 2/3 } }$ & $=$ & $ 
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,1)/$\mc{A}$, 
+      (1,0)/\point{2pt}
+    } \mediumsqcup
+    \strule{\pattdispscale}{3}{2}{
+      (0,1)/$\mc{A}$, 
+      (1,0)/\point{2pt},
+      (2,1)/\point{2pt}
+    }$ & 
+  \end{tabular}
+  \caption{\CombCov\ cover of $\Av{a\text{-}bc, a\text{-}cb}$}
+  \label{figure:Cleasson Av(a-bc, a-cb)}
+\end{figure}
+
+Similarly we can easily see that the cover is indeed correct and derive the 
+exponential generating function to prove the enumeration.
+
+\textcite{bean_enumerations_2017} studied the set of permutations simultaneously 
+avoiding a vincular and covincular mesh pattern of length 3. An interesting 
+result is that \CombCov\ finds the same kind of cover for both $\Av{ 
+\mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 1/0, 1/1, 1/2, 1/3 }, 
+\mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/1, 3/3 }{ 0/2, 1/2, 2/2, 3/2 } 
+}$ and $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{
+0/2, 1/2, 2/2, 3/2}, \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{} 
+}$ which is shown in Figure~\ref{figure:Covincular Motzkin numbers}. These 
+avoidance sets are enumerated by the \emph{Motzkin} numbers $M_n$ 
+(\oeis{A001006}) and it is easy to see from the cover that the generating 
+function fulfills $F(x) = 1 + xF(x) + x^2F(x)^2$ which indeed gives us the 
+coefficients $M_n$ to $x^n$.
+
+\begin{figure}[htbp]
+  \center
+    \begin{tabular}{ r c l l }
+    $\mc{A} = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 1/0, 1/1, 1/2, 1/3 }, \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/1, 3/3 }{ 0/2, 1/2, 2/2, 3/2 } }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,1)/$\mc{A}$, 
+      (1,0)/\point{2pt}
+    } \mediumsqcup
+    \strule{\pattdispscale}{4}{4}{
+      (0,3)/$\mc{A}$, 
+      (1,0)/\point{2pt},
+      (2,2)/\point{2pt},
+      (3,1)/$\mc{A}$
+    } $ & \\
+    $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{0/2, 1/2, 2/2, 3/2}, \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{} }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,1)/$\mc{B}$, 
+      (1,0)/\point{2pt}
+    } \mediumsqcup
+    \strule{\pattdispscale}{4}{4}{
+      (0,3)/$\mc{B}$, 
+      (1,0)/\point{2pt},
+      (2,2)/\point{2pt},
+      (3,1)/$\mc{B}$
+    } $ &
+  \end{tabular}
+  \caption{\CombCov\ cover of avoidance sets that gives rise to the Motzkin numbers}
+  \label{figure:Covincular Motzkin numbers}
+\end{figure}
+
+Other successful covers in this paper include 
+$\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{ 1/0, 1/1, 1/2, 1/3 }, \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/2, 1/2, 2/2, 3/2 } }$ 
+(Figure~\ref{figure:Covincular Av(132_1_e, 231_e_2)}, \oeis{A011782}) and 
+$\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 }, \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/1, 1/1, 2/1, 3/1 } }$ 
+(Figure~\ref{figure:Covincular Av(123_2_e, 231_e_1)}, \oeis{A152947}).
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{ 1/0, 1/1, 1/2, 1/3 }, \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/2, 1/2, 2/2, 3/2 } }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{3}{2}{
+      (0,1)/$\mc{B}$, 
+      (1,0)/\point{2pt},
+      (2,1)/$\mc{C}$
+    } $ & \begin{tabular}{@{}c@{}}
+            $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{} }$ \\
+            $\mc{C} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{} }$
+          \end{tabular}
+  \end{tabular}
+  \caption{\CombCov\ cover for a pair of vincular and covincular mesh patterns}
+  \label{figure:Covincular Av(132_1_e, 231_e_2)}
+\end{figure}
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\mc{A} = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 }, \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/1, 1/1, 2/1, 3/1 } }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,1)/\point{2pt}, 
+      (1,0)/$\mc{A}$
+    } \mediumsqcup
+    \strule{\pattdispscale}{4}{4}{
+      (0,1)/$\mc{B}$, 
+      (1,0)/\point{2pt},
+      (2,3)/$\mc{B}$,
+      (3,2)/\point{2pt}
+    }$ & $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{} }$
+  \end{tabular}
+  \caption{\CombCov\ cover for another pair of vincular and covincular mesh patterns}
+  \label{figure:Covincular Av(123_2_e, 231_e_1)}
+\end{figure}
+
+We note that $\mc{B} = \left\{ \epsilon, 1, 21, 321, \ldots \right\}$ is the set 
+of all decreasing permutations so the generating function for $\Av{ 
+\mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 2/0, 2/1, 2/2, 2/3 }, 
+\mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/1, 1/1, 2/1, 3/1 } 
+}$ in Figure~\ref{figure:Covincular Av(123_2_e, 231_e_1)} fulfills \[ F(x) 
+= 1 + xF(x) + \frac{x^2}{(1 - x)^2} \] which we can solve to find \[ F(x) = 
+\frac{2x^2 - 2x + 1}{(1 - x)^3} \] which gives us the coefficients $1 + {n 
+\choose 2}$ to $x^n$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Length 2 mesh patterns\label{Length 2 mesh patterns results}}
+
+\textcite{hilmarsson_wilf-classification_2015} classified all mesh patterns of 
+length 2 into \emph{Wilf-equivalence} classes, i.e., the classes of the same 
+enumerations. Some notable covers are shown in 
+Figures~\ref{figure:WilfShort-1234678}, \ref{figure:WilfShort-234678} and 
+\ref{figure:WilfShort-containment}.
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 0/2, 1/0, 1/2, 2/0, 2/1 } }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,0)/\point{2pt}, 
+      (1,1)/$\mc{B}$
+    } \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,1)/\point{2pt}, 
+      (1,0)/\point{2pt},
+      (1,1)/$\S$
+    }$ & $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 1 }{ 1/1 }{ 0/1, 1/0 } }$ \\
+    $\Co{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 0/2, 1/0, 1/2, 2/0, 2/1 } }$ & $=$ & $
+    \strule{\pattdispscale}{4}{4}{
+      (0,0)/\point{2pt}, 
+      (1,1)/$\S$,
+      (2,2)/\point{2pt},
+      (3,3)/$\mc{B}$
+    }$ & 
+    \end{tabular}
+  \caption{Avoidance and containment covers for a length 2 mesh pattern}
+  \label{figure:WilfShort-1234678}
+\end{figure}
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/1, 0/2, 1/0, 1/2, 2/0, 2/1 } }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{
+      (0,0)/$\mc{B}$
+    } \mediumsqcup
+    \strule{\pattdispscale}{3}{3}{
+      (0,0)/$\mc{B}$, 
+      (1,1)/\point{2pt},
+      (2,2)/$\mc{B}$
+    }$ & $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 1 }{ 1/1 }{ 0/1, 1/0 } }$ \\
+    $\Co{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/1, 0/2, 1/0, 1/2, 2/0, 2/1 } }$ & $=$ & $
+    \strule{\pattdispscale}{5}{5}{
+      (0,0)/$\S$,
+      (1,1)/\point{2pt}, 
+      (2,2)/$\mc{B}$,
+      (3,3)/\point{2pt},
+      (4,4)/$\mc{B}$
+    }$
+  \end{tabular}
+  \caption{Avoidance and containment covers for another length 2 mesh pattern}
+  \label{figure:WilfShort-234678}
+\end{figure}
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\Co{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 1/0, 1/2, 2/1, 2/2 } }$ & $=$ & $
+    \strule{1}{5}{5}{
+      (0,4)/$\mc{C}$, 
+      (1,1)/\point{2pt},
+      (2,2)/$\S$,
+      (3,3)/\point{2pt},
+      (4,0)/$\S$
+    }$ & $\mc{C} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 1/0, 1/2, 2/1, 2/2 } }$ \\
+    $\Co{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 1/1, 1/2, 2/0, 2/1 } }$ & $=$ & $
+    \strule{1}{5}{4}{
+      (0,3)/$\S$, 
+      (1,1)/\point{2pt},
+      (2,0)/$\mc{D}$,
+      (3,2)/\point{2pt},
+      (4,3)/$\S$
+    }$ & $\mc{D} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 1/1, 1/2, 2/0, 2/1 } }$ \\
+    $\Co{ \mpattern{scale=\patttextscale}{ 2 }{ 1/2, 2/1 }{ 0/0, 0/1, 1/1, 1/2, 2/0, 2/2 } }$ & $=$ & $
+    \strule{1}{5}{5}{
+      (0,4)/$\S$, 
+      (1,1)/\point{2pt},
+      (2,0)/$\S$,
+      (3,3)/\point{2pt},
+      (4,2)/$\S$
+    }$ &
+  \end{tabular}
+  \caption{Containment covers for some length 2 mesh pattern}
+  \label{figure:WilfShort-containment}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Bivincular permutation patterns\label{Bivincular permutation patterns results}}
+
+We now focus on some results of bivincular permutation patterns replicated from 
+\textcite{parviainen_wilf_2009}. Among them is the cover
+\[
+  \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{ 0/3, 1/3, 2/3, 3/3 } } =
+  \strule{1}{1}{1}{} \mediumsqcup
+  \strule{1}{3}{3}{
+    (0,1)/$\S$,
+    (1,2)/\point{2pt},
+    (2,0)/$\S$
+  }
+\]
+(enumeration \oeis{A003149}) which is especially interesting when comparing it 
+to the very well known
+\[
+  \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{} } = 
+  \strule{1}{1}{1}{} \mediumsqcup
+  \strule{1}{3}{3}{
+    (0,1)/$\mc{A}$,
+    (1,2)/\point{2pt},
+    (2,0)/$\mc{A}$
+  }
+\]
+(enumerated by the \emph{Catalan numbers}, \oeis{A000108}) with $\mc{A} = \Av{ 
+\mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{} }$. The 
+difference is that $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 
+3/2 }{ 0/3, 1/3, 2/3, 3/3 } }$ is the set of permutations $\pi$ avoiding 
+$231$ in which the $3$ in the occurrence of $231$ is the \emph{topmost point} of 
+$\pi$. This is already secured by the point block in the second mesh tiling in 
+the cover of $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{ 
+0/3, 1/3, 2/3, 3/3 } }$ and explains why it includes $\S$ blocks instead 
+of the root.
+
+In addition to finding covers for the results presented in the paper, we 
+searched for covers for all possible length 3 bivincular mesh patterns, 
+discarding symmetries. That made for 163 more avoidance sets to find covers for, 
+out of which 79 were successful. Some interesting covers are shown in 
+Figure~\ref{figure:WilfBiVincular-avoidance}.
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 0/0, 0/1, 0/2, 0/3, 1/3, 2/3, 3/3 } }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{2}{3}{
+      (0,1)/\point{2pt},
+      (1,0)/$\S$,
+      (1,2)/$\mc{B}$
+    }$ & $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{ 0/0, 0/1, 0/2 } }$ \\
+    $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/2, 3/3 }{ 0/0, 0/1, 0/2, 0/3, 1/0, 1/1, 1/2, 1/3, 2/0, 2/2, 3/0, 3/2 } }$ & $=$ & $ 
+    \strule{\pattdispscale}{1}{1}{
+      (0,0)/$\mc{C}$
+    } \mediumsqcup
+    \strule{\pattdispscale}{2}{2}{
+      (0,0)/\point{2pt},
+      (1,1)/$\mc{D}$
+    }$ & \begin{tabular}{@{}c@{}}
+            $\mc{C} = \Av{ \mpattern{scale=\patttextscale}{ 1 }{ 1/1 }{ 0/0, 0/1, 1/0 } }$ \\
+            $\mc{D} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{ 0/1, 0/2, 1/1, 2/1 } }$
+          \end{tabular} \\
+    $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/1, 2/3, 3/2 }{ 0/0, 0/1, 0/2, 0/3, 1/0, 1/1, 1/2, 1/3, 2/0, 2/1, 2/2, 2/3, 3/0, 3/1, 3/3 } }$ & $=$ & $ 
+    \strule{\pattdispscale}{1}{1}{
+      (0,0)/$\mc{E}$
+    } \mediumsqcup
+    \strule{\pattdispscale}{3}{3}{
+      (0,0)/\point{2pt},
+      (1,2)/\point{2pt},
+      (2,1)/$\mc{C}$
+    }$ & $\mc{E} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{ 0/0, 0/1, 0/2, 1/0, 1/1, 1/2, 2/0, 2/2 } }$
+  \end{tabular}
+  \caption{Avoidance covers for some bivincular mesh patterns of length 3}
+  \label{figure:WilfBiVincular-avoidance}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Pattern-avoiding Fishburn permutations\label{Pattern-avoiding Fishburn permutations results}}
+
+\textcite{gil_pattern-avoiding_2018} defined \emph{Fishburn permutations} as 
+those the avoid the mesh pattern $p = \mpattern{scale=\patttextscale}{ 3 }{ 
+1/2, 2/3, 3/1 }{ 0/1, 1/0, 1/1, 2/1, 1/2, 3/1, 1/3 }$ because $\left| \Avn{p} 
+\right| = \xi(n)$ are the \emph{Fishburn numbers} (\oeis{A022493}).
+
+They studied the set of Fishburn permutations avoiding a permutation $\pi$ of 
+length 3 or 4 (i.e., the set of permutations simultaneously avoiding $p$ and 
+$\pi$). For each of the six permutations $\pi$ of length 3, they enumerated all 
+sets $\Av{p, \pi}$ and \CombCov\ finds a cover for five of them. Then the 
+authors enumerated some of the sets $\Av{p, \pi}$ for $\pi \in \S_4$ but focused 
+mostly on proving that $\left| \Avn{p, \pi} \right| = C_n$ (the \emph{Catalan 
+numbers}, \oeis{A000108}) for $\pi \in \left\{ 1234, 1243, 1324, 1423, 2134, 
+2143, 3124, 3142 \right\}$. We found a cover only for the last $\pi$, indicating 
+that \[ \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/1, 
+1/0, 1/1, 2/1, 1/2, 3/1, 1/3 }, \mpattern{scale=\patttextscale}{ 4 }{ 1/3, 2/1, 
+3/4, 4/2 }{} } = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 
+2/3, 3/1 }{} } .\] The only other cover we found with a length 4 
+permutation $\pi$ is shown in Figure~\ref{figure:Fishburn-1342}.
+
+\begin{figure}[htbp]
+  \center
+  \begin{tabular}{ r c l l }
+    $\Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{ 0/1, 1/0, 1/1, 2/1, 1/2, 3/1, 1/3 } , 
+          \mpattern{scale=\patttextscale}{ 4 }{ 1/1, 2/3, 3/4, 4/2 }{} }$ & $=$ & $
+    \strule{\pattdispscale}{1}{1}{} \mediumsqcup
+    \strule{\pattdispscale}{3}{2}{
+      (0,1)/$\mc{B}$,
+      (1,0)/\point{2pt},
+      (2,1)/$\mc{C}$
+    }$ & \begin{tabular}{@{}c@{}}
+            $\mc{B} = \Av{ \mpattern{scale=\patttextscale}{ 2 }{ 1/1, 2/2 }{} }$ \\
+            $\mc{C} = \Av{ \mpattern{scale=\patttextscale}{ 3 }{ 1/2, 2/3, 3/1 }{} }$
+          \end{tabular}
+  \end{tabular}
+  \caption{Fishburn permutations avoiding $1342$}
+  \label{figure:Fishburn-1342}
+\end{figure}
+
+In addition to what the authors did we searched for covers of Fishburn 
+permutations avoiding two length 4 permutations $\pi_1$ and $\pi_2$. Out of the 
+276 avoidance sets $\Av{p, \pi_1, \pi_2}$ we found covers for 10 of them but 
+none is interesting enough to show here.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Summary}
+
+Out of the 159 results from the papers that we tried to replicate with \CombCov\ 
+it found covers for 49 of them. This is summarized in Table~\ref{table:Summary 
+of mesh tiling results}, broken down by paper.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{ l | c | c | c }
+        Paper & Section & Results in paper & Covers found \\ \hline
+        \cite{claesson_generalized_2001} & \ref{Vincular and covincular length 3 mesh patterns results} & 6 & 5 \\
+        \cite{bean_enumerations_2017} & \ref{Vincular and covincular length 3 mesh patterns results} & 40 & 11 \\
+        \cite{hilmarsson_wilf-classification_2015} & \ref{Length 2 mesh patterns results} & 65 & 15 \\
+        \cite{parviainen_wilf_2009} & \ref{Bivincular permutation patterns results} & 24 & 11 \\
+        \cite{gil_pattern-avoiding_2018} & \ref{Pattern-avoiding Fishburn permutations results} & 24 & 7 
+    \end{tabular}
+    \caption{Summary of replicating mesh pattern covers}
+    \label{table:Summary of mesh tiling results}
+\end{table}

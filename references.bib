@@ -31,7 +31,7 @@
 	abstract = {New automatic methods for enumerating permutation classes are introduced. The first is Struct, which is an algorithm that conjectures a structural description using rules similar to generalized grid classes. These conjectured structural descriptions can be easily enumerated and are easily verified by a human to be correct.
 We then introduce the CombSpecSearcher algorithm, a general framework for searching for combinatorial specifications. To use this, one must write strategies that explain how combinatorial classes are related. We introduce strategies for permutation classes that are used by the CombSpecSearcher algorithm.
 We provide an algorithm for finding the insertion encoding of regular insertion encodable permutation classes. Our approach requires less generation of permutations and as such is much faster than previous implementations. The algorithm relies on tilings; a new object introduced that can be used to encode geometric proof ideas for permutation patterns efficiently.
-After developing the theory of tilings briefly, we encode more geometric proof ideas that allow for placing points, each such leading to a new algorithm. All of these algorithms search for combinatorial specifications using the CombSpecSearcher which can then be enumerated. The algorithms introduced that use CombSpecSearcher and tilings we collectively call TileScope.custom
+After developing the theory of tilings briefly, we encode more geometric proof ideas that allow for placing points, each such leading to a new algorithm. All of these algorithms search for combinatorial specifications using the CombSpecSearcher which can then be enumerated. The algorithms introduced that use CombSpecSearcher and tilings we collectively call TileScope.
 We introduce the notion of an elementary permutation class. We show that our definition is equivalent to the permutation class being a disjoint union of generalized peg permutations, and as such all polynomial permutation classes are elementary. We show that such a description for a permutation class can be extended to permutation classes where the basis has an extra pattern.
 The methods introduced in this thesis can enumerate all permutation classes with six or more length four patterns. There are only 77 bases consisting of only length four patterns which are not enumerated by our methods.},
 	language = {en},
@@ -200,4 +200,20 @@ The methods introduced in this thesis can enumerate all permutation classes with
 	year = {2010},
 	keywords = {-free poset, Ascent sequence, Chord diagram, Encode, Enumerate, Involution, Non-D-finite series, Pattern avoiding permutation},
 	pages = {884--909}
+}
+
+@article{guibas_string_1981,
+	title = {String overlaps, pattern matching, and nontransitive games},
+	volume = {30},
+	issn = {0097-3165},
+	url = {http://www.sciencedirect.com/science/article/pii/0097316581900054},
+	doi = {10.1016/0097-3165(81)90005-4},
+	abstract = {This paper studies several topics concerning the way strings can overlap. The key notion of the correlation of two strings is introduced, which is a representation of how the second string can overlap into the first. This notion is then used to state and prove a formula for the generating function that enumerates the q-ary strings of length n which contain none of a given finite set of patterns. Various generalizations of this basic result are also discussed. This formula is next used to study a wide variety of seemingly unrelated problems. The first application is to the nontransitive dominance relations arising out of a probabilistic coin-tossing game. Another application shows that no algorithm can check for the presence of a given pattern in a text without examining essentially all characters of the text in the worst case. Finally, a class of polynomials arising in connection with the main result are shown to be irreducible.},
+	language = {en},
+	number = {2},
+	journal = {Journal of Combinatorial Theory, Series A},
+	author = {Guibas, L. J and Odlyzko, A. M},
+	month = mar,
+	year = {1981},
+	pages = {183--208}
 }

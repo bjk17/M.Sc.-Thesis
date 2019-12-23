@@ -9,7 +9,7 @@ a tool.
 \section{Background\label{words background}}
 
 \textcite{bean_automatic_2019} implemented the \Struct\ algorithm in Python and 
-published it on GitHub \cite{bean_permstruct_2017}. The core idea is to write a 
+published it on GitHub~\cite{bean_permstruct_2017}. The core idea is to write a 
 permutation class $\Av{\Pi}$ as a disjoint set of ``simpler'' sets of 
 permutations $S_i$ so that \[\bigcup_i S_i = \Av{\Pi}\] and $S_i \cap S_j = 
 \emptyset$ for $i \neq j$. The challenge is to come up with these simpler 
@@ -18,8 +18,9 @@ this context we call $\Av{\Pi}$ the \emph{root object} and $S_i$ the
 \emph{rules} or \emph{subrules}. \CombCov\ aims to be a general framework to 
 solve these problems for any kind of combinatorial object. It is available as a 
 Python module\footnote{Installable via \texttt{pip install CombCov}} (with 
-source code hosted on GitHub \cite{kristinsson_combcov:_2019}) and only requires 
-the user to come up with, and implement in Python, how to generate the rules. 
+source code hosted on GitHub~\cite{kristinsson_combcov:_2019}) and only requires 
+the user to come up with, and implement in Python, a method to generate the rules 
+and a method to return all elements of specific size. 
 The rest is handled by the framework.
 
 \begin{definition}
@@ -30,7 +31,7 @@ The rest is handled by the framework.
 
 In what follows of this thesis we only concern ourselves with words over the two 
 letter alphabet $\Sigma = \left\{ a,b \right\}$ and the reader should assume 
-this choice of alphabet if it not specifically stated. An example of a word of 
+this choice of alphabet if it is not specifically stated. An example of a word of 
 length 4 is $abba$.
 
 \begin{definition}
@@ -47,7 +48,7 @@ length 4 is $abba$.
 
 \begin{definition}
   The \emph{concatenation} of two words $u = u_1 \cdots u_m$ and $v = v_1 \cdots 
-  v_n$ is the word $uv = u_1 \cdots u_m v_1 \cdots v_n$ of length $m+ n$. The 
+  v_n$ is the word $uv = u_1 \cdots u_m v_1 \cdots v_n$ of length $m + n$. The 
   concatenation of a word $u$ and a set $\mc{S}$ of words is written either 
   $u\mc{S}$ or $u + \mc{S}$ and defined as the set $\{ us \colon s \in 
   \mc{S}\}$. In this context we say that $u$ is the \emph{prefix} of $uv$ and 
@@ -69,7 +70,7 @@ in $W$ meaning $W \notin \Av{\mc{Z}}$, contradicting the initial assumption.
 \section{Implementation\label{words implementation}}
 
 We now discuss how we implement the abstract idea of words with \CombCov\ and
-go step by step through the algorithm how the framework searches for covers of 
+go step by step through the algorithm and how the framework searches for covers of 
 these avoidance sets.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,9 +79,9 @@ these avoidance sets.
 Recall that for any set $S$ of words we can write $\Av{S} = 
 \bigcup\limits_{n=0}^{\infty}\Avn{S}$. \CombCov\ takes in a parameter 
 \texttt{max\_elmnt\_size}\footnote{In Section~\ref{words results} we set 
-\texttt{max\_elmnt\_size = 7}.} and considers only \[ R = 
-\bigcup\limits_{n=0}^{\texttt{max\_elmnt\_size}}\Avn{S} \] for it computations. 
-The hope is that the conclusions \CombCov\ makes for $R$ generalizes to all 
+\texttt{max\_elmnt\_size = 7}} and considers only \[ R = 
+\bigcup\limits_{n=0}^{\texttt{max\_elmnt\_size}}\Avn{S} \] for its computations. 
+The hope is that the conclusions \CombCov\ makes for $R$ generalize to all 
 element sizes, something that is often easy for a human to verify (or disprove).
 
 Now assume $R = \left\{ x_1, \ldots, x_m \right\}$. For a subset $R'$ of $R$ we 
@@ -90,9 +91,9 @@ $b_i$ is equal to 1 if $x_i \in R'$ and 0 otherwise. We assume a consistent
 order for the elements of $R$ and in the case of words we use lexicographical 
 ordering.
 
-E.g., if $R = \{\epsilon, a, b, ab, ba, bb\}$ then $B' = 111111$ denotes the 
-whole set $R$ and $B'' = 011001$ denotes the subset $\{a, b, bb\}$ and $B''' = 
-100000$ the subset $\{\epsilon\}$.
+For example, if $R = \{\epsilon, a, b, ab, ba, bb\}$ then $B' = 111111$ denotes the 
+whole set $R$, $B'' = 011001$ denotes the subset $\{a, b, bb\}$ and $B''' = 100000$ 
+the subset $\{\epsilon\}$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,8 +125,8 @@ finite abstraction}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Generating the subsets}
 
-As previously mentioned, the way we generate these simpler subset cannot be 
-abstracted away in \CombCov\ as we need to do it differently with different 
+As previously mentioned, the way we generate these simpler subsets cannot be 
+abstracted away in \CombCov\ as we need to do it differently for different 
 combinatorial objects. The rules are \emph{descriptions} of the subsets $S_i$ 
 of $\Av{S}$ and the finite counterparts $R_i$ of $R$.
 
@@ -140,25 +141,11 @@ when trying to prove (and then disprove) the conjectures.
 
 Assuming $S = \{ s_1, \ldots, s_n \}$ is a set of $n$ words, the longest of 
 length $k$, we decided to create rules of the form $S_i = u \Av{S'}$ where $u$ 
-is a word in $\Av{S}$ of length at most $k$ chosen from $R$ and $S' = \Sigma$ 
-(the whole alphabet) or $S'$ is a set of words each of which is a subword of a 
-word in $S$. In addition we sort $S'$ by lexicographical order and check for 
-every word $s' \in S'$ if it is contained in a longer word $s'' \in S'$, and if 
-so, remove $s''$ from $S'$.
-
-% For an avoidance set of words $\Av{S}$ we decided to create rules of the form 
-% $S_i = u \Av{S'}$ defined as follows:
-
-% \begin{itemize}
-%     \item $S = \{ s_1, \ldots, s_n \}$ is a set of $n$ words. Let $k$ be the 
-%     	length of the biggest word in $S$.
-%     \item $u$ is a word in $\Av{S}$ of length at most $k$ chosen from $R$
-%     \item $S' = \Sigma$ (the whole alphabet) or $S'$ is a set of words each of 
-%     	which is a subword of a word in $S$. 
-%     \item Sort $S'$ by lexicographical order and check for every word 
-%     	$s' \in S'$ if it is contained in a longer word $s'' \in S'$, and if so, 
-%     	remove $s''$ from $S'$.
-% \end{itemize}
+is a word in $\Av{S}$ of length at most $k$ or $1$, whichever is higher, chosen 
+from $R$ and $S' = \Sigma$ (the whole alphabet) or $S'$ is a set of words each 
+of which is a subword of a word in $S$. In addition we sort $S'$ by lexicographical 
+order and check for every word $s' \in S'$ if it is contained in a longer word 
+$s'' \in S'$, and if so, remove $s''$ from $S'$. 
 
 \CombCov\ now generates the finite sets $R_i$ of all elements in $S_i$ of size 
 up to \texttt{max\_elmnt\_size}. If the same element is generated in more than 
@@ -185,26 +172,26 @@ string $010100$. The rule $a \Av{b}$ generates the set $R_2 = \{ a, aa \} \not
 Without loss of generality, assume that the $k$ valid rules are the first $k$ 
 ones $S_1, \ldots, S_k$. The sets $R_1, \ldots, R_k$ with corresponding 
 containment strings $B^{(1)}, \ldots, B^{(k)}$ are not necessarily disjoint and 
-some may even be equal to each other. \CombCov\ constructs a \emph{linear 
-problem} of $k$ Boolean variables with $m$ equations minimizing the sum of the
-variables:
+some may even be equal to each other. \CombCov\ constructs the following 
+\emph{integer linear programming model} on $k$ binary variables $x_1, \ldots, x_k$
+with $m$ equations:
 
 \begin{alignat*}{5}
     \text{Min}  \qquad  & \mathrlap{z = x_1 + \dotsb + x_k}   & & & & & & & \\
     \text{s.t.} \qquad  & &                             x_1 b^{(1)}_{1}         & +{} & \dotsb & +{} &                             x_k b^{(k)}_{1}             & ={} & 1      \\
-                        & & \mathrel{\makebox[\widthof{$x_1 b^{(1)}_{j}$}]{\vdots}} & & \ddots &     & \mathrel{\makebox[\widthof{$x_1 b^{(k)}_{j}$}]{\vdots}} & ={} & \vdots \\
+                        & & \mathrel{\makebox[\widthof{$x_1 b^{(1)}_{j}$}]{\vdots}} & & \ddots &     & \mathrel{\makebox[\widthof{$x_1 b^{(k)}_{j}$}]{\vdots}} &     & \vdots \\
                         & &                             x_1 b^{(1)}_{m}         & +{} & \dotsb & +{} &                             x_k b^{(k)}_{m}             & ={} & 1      \\
     \text{with} \qquad  & \mathrlap{x_i \in \left\{ 0, 1 \right\} \text{ for } i = 1, \dotsc, k.} & & & & & & &
 \end{alignat*}
 
-The variables $x_i$ denotes whether rule $i$ is part of the cover or not, 
-$b^{(j)}_{i}$ the Boolean value representing if element $j$ of $R$ is in the 
-finite set $R_i$. \CombCov\ uses the linear problem solver Gurobi 
-\cite{lcc_gurobi_optimization_gurobi_2019} (with fallback on COIN CLP/CBC LP 
-\cite{coin-or_coin_2019}) to return a subset $I \subseteq \llbracket k 
-\rrbracket$ with indices of the rules constituting the cover, if a cover is 
-found. Note that the linear problem is defined as a minimization problem because 
-we want solutions consisting of as few rules as possible.
+The variable $x_i$ denotes whether rule $i$ is part of the cover or not, and 
+$b^{(j)}_{i}$ is a binary value representing if element $j$ of $R$ is in the 
+finite set $R_i$ or not. \CombCov\ uses the linear programming solver 
+Gurobi~\cite{lcc_gurobi_optimization_gurobi_2019} (with fallback on COIN 
+CLP/CBC LP~\cite{coin-or_coin_2019}) to return a subset $I \subseteq 
+\llbracket k \rrbracket$ with indices of the rules constituting the cover, 
+if a cover is found. Note that the linear programming model uses minimization 
+because we want solutions consisting of as few rules as possible.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -252,8 +239,8 @@ this exact problem in \CombCov\ gives the 3-rule solution \[ \Av{aa} =
 \epsilon \Av{a,b} \cup a \Av{a} \cup b \Av{aa} \] with corresponding bitstrings 
 $100000$, $010100$ and $001011$. This is certainly a correct cover of $R$, but 
 \emph{not} of $\Av{aa}$. It's easy to see that $abba \in \Av{aa}$ but none of 
-the rules is able to generate this word. After seeing this, and rerunning 
-\CombCov\ with sufficiently high value of \texttt{max\_elmnt\_size} we 
+the rules are able to generate this word. After seeing this, and running 
+\CombCov\ again with a sufficiently high value of \texttt{max\_elmnt\_size} we 
 eventually get the correct solution \[\Av{aa} = \epsilon \Av{a,b} \cup a 
 \Av{a,b} \cup b \Av{aa} \cup ab \Av{aa}\] as seen in Section~\ref{words results} 
 where \texttt{max\_elmnt\_size = 7}.
@@ -262,20 +249,20 @@ where \texttt{max\_elmnt\_size = 7}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results\label{words results}}
 
-All results presented in this section as well as in Section~\ref{mesh tilings 
-results} were obtained using version \texttt{v0.6.3} of \CombCov, which is the 
-latest version at the time of writing, and \texttt{max\_elmnt\_size = 7}. In 
-this section only the results were obtained by running the software on a 2017 
-model MacBook Pro laptop with execution times on the scale of seconds to 
-minutes. 
+All results presented in this section were obtained using version \texttt{v0.6.5} 
+of \CombCov, which is the latest version at the time of writing, and 
+\texttt{max\_elmnt\_size = 7}. The software ran on a 2017 model MacBook Pro laptop 
+with execution times ranging from seconds to minutes.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Overview of results}
 
 We applied \CombCov\ on a select few avoidance sets of words over the alphabet 
 $\Sigma = \{a,b\}$. The avoiding subword sets were selected with one or two 
 words, each of length at most three. \CombCov\ prints out the enumerations of 
 the sequences up to length \texttt{max\_elmnt\_size} which we include along with 
-the corresponding OEIS \cite{oeis_foundation_inc._-line_2019} sequence number. 
+the corresponding OEIS~\cite{oeis_foundation_inc._-line_2019} sequence number. 
 The results are presented in Table~\ref{table:some avoidance sets of words}.
 
 {\renewcommand{\arraystretch}{1.5}
@@ -284,7 +271,9 @@ The results are presented in Table~\ref{table:some avoidance sets of words}.
     \begin{tabular}{ c | c | l | l }
         Avoiding subwords & Cover Found & Enumeration & OEIS \\
         \hline\hline
-        $\emptyset$ & \emph{No} & $1, 2, 4, 8, 16, 32, 64, 128$ & \oeis{A000079} \\ \hline
+        $\emptyset$ & 
+            $\epsilon \Av{a,b} \cup a \Av{\emptyset} \cup b \Av{\emptyset}$ & 
+            $1, 2, 4, 8, 16, 32, 64, 128$ & \oeis{A000079} \\ \hline
         $\{a\}$ & 
             $\epsilon \Av{a,b} \cup b \Av{a}$ & 
             $1, 1, 1, 1, 1, 1, 1, 1$ & \oeis{A000012} \\ 
@@ -341,8 +330,8 @@ The results are presented in Table~\ref{table:some avoidance sets of words}.
         $\{aba, bb\}$ & 
             {\renewcommand{\arraystretch}{1}
             \begin{tabular}{@{}c@{}}
-                $\epsilon \Av{a,b}\cup a \Av{ba,bb}$ \\
-                $\cup b \Av{a,b} \cup ba \Av{ba,bb}$ 
+                $\epsilon \Av{a,b}\cup a \Av{ba, bb}$ \\
+                $\cup b \Av{a,b} \cup ba \Av{ba, bb}$ 
             \end{tabular}} & 
             $1, 2, 3, 4, 4, 4, 4, 4$ & \oeis{A158411} (shifted) \\ 
         $\{aba, bab\}$ & 
@@ -354,8 +343,8 @@ The results are presented in Table~\ref{table:some avoidance sets of words}.
     \label{table:some avoidance sets of words}
 \end{table}}
 
-We are encouraged to see that \CombCov\ manages to find covers for this many 
-examples. We now take a closer look at some of the results.
+The fact that \CombCov\ manages to find covers for this many examples is 
+encouraging. We now take a closer look at some of the results.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -363,10 +352,10 @@ examples. We now take a closer look at some of the results.
 
 The algorithm suggests that \[\Av{aa} = \epsilon \Av{a,b} \cup a \Av{a,b} \cup b 
 \Av{aa} \cup ab \Av{aa}\] where on the right-hand side there are four disjoint 
-subsets, verified by the algorithm for all elements size up to 7. The cover is 
+subsets, verified by the algorithm for all elements of size up to 7. The cover is 
 indeed correct, as can be seen by thinking of a word $w \in \Av{aa}$ in a series 
 of \emph{if-else} statements of the first few characters and using recursion. 
-We will now show that the cover yield the sequence of the (shifted) Fibonacci 
+We will now show that the cover yields a (shifted) sequence of the Fibonacci 
 numbers.
 
 Recall that $\epsilon$ is the empty word and note that $\Av{a,b}$ avoids all 
@@ -387,14 +376,16 @@ the enumeration.
 It is clear that our implementation of subrule generation for avoidance sets of 
 words, the format of $u \Av{S'}$, is not general enough to find a cover for all 
 avoidance sets of words. It is not the fault of the tool, but of the one who 
-yields it.
+wields it. 
+With some tweaking~\cite{guibas_string_1981} to the rule generation 
+logic, \CombCov\ should be able to find covers for all avoidance sets of words.
 
 It is interesting to see that $\Av{aaa, bbb}$ and $\Av{aba, bab}$ both have the 
 same enumeration (up to length 7) but \CombCov\ is unable to find a cover for 
 either of the avoidance sets of words. Meanwhile, $\Av{aa, bb}$ and 
-$\Av{ab, ab}$ also have the same enumeration of which \CombCov\ finds a cover 
+$\Av{ab, ba}$ also have the same enumeration of which \CombCov\ finds a cover 
 for the latter but not the former. It is simple to confirm that \[\Av{ab, ba} = 
 \epsilon Av(a,b)\cup a \Av{b} \cup b \Av{a}\] as the first rule is the set of 
 the empty word, the second consists of all non-empty words of only $a$'s and the 
 third rule generates all non-empty words consisting of only $b$'s. It is a 
-different description of the set of words that contains neither $ab$ or $ba$.
+different description of the set of words that contain neither $ab$ nor $ba$.
